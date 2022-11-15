@@ -34,6 +34,9 @@ void setup()
   //For debug in serial monitor
   Serial.begin(9600);
 
+  //For Bluetooth
+  Serial1.begin(9600);
+
     // see if the card is present and can be initialized:
   if (!SD.begin(SD_port)) 
   {
@@ -77,7 +80,16 @@ void loop()
       Serial.print(": ");
       Serial.print(SiPM_mV[i]);
       Serial.print(" mV \n");
+     
 
+      //sends to bluetooth module
+      Serial1.print("Channel ");
+      Serial1.print(i);
+      Serial1.print(": ");
+      Serial1.print(SiPM_mV[i]);
+      Serial1.print(" mV \n");
+     
+      
       //print in file in SD card
       data.print(SiPM_ADC[i]);
       data.print(" ");
@@ -85,7 +97,8 @@ void loop()
     data.print("\n");
     //certifies that the datas are saved
     data.flush();
-    Serial.print("\n");   
+    Serial.print("\n");
+    Serial1.print("\n");   
   }
 
   delay(1000);
