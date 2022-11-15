@@ -2,6 +2,15 @@
 //SBND-FERMILAB
 //PROJECT LIGHT MONITORING
 
+#include <SD.h> 
+#include <SPI.h>
+
+//define the variable of sd card
+const int SD_port = SDCARD_SS_PIN;
+File data;
+bool open_file = false;
+
+
 #define  SiPM_n 4
 
 //set the readout pins as ADC
@@ -24,26 +33,60 @@ void setup()
 
   //For debug in serial monitor
   Serial.begin(9600);
-  
+
+    // see if the card is present and can be initialized:
+  if (!SD.begin(SD_port)) 
+  {
+    Serial.print("Card failed, or not present");
+    // don't do anything more:
+    while (1);
+  }
+
+ 
+  delay(5000);
+  Serial.print("card initialized. \n");
 }
 
 void loop() 
 {
-  //read SIPM in adc_channels
-
-  for(int i=0;i<SiPM_n;i++)
+  //check if the file is already open   
+  if(!open_file)
   {
-    Serial.print("Channel ");
-    Serial.print(i);
-    Serial.print(": ");
-    SiPM_ADC[i]=analogRead(SiPM[i]);
-    SiPM_mV[i]=SiPM_ADC[i]*resolution;
-    Serial.print(SiPM_mV[i]);
-    Serial.print(" mV \n");
+       //for test purposes
+    if(SD.exists("teste.txt"))
+    {
+      SD.remove("teste.txt");
+    }
+     
+    //if isnt, opens the file
+    data = SD.open("teste.txt", FILE_WRITE);
+    open_file=true;
   }
   
-  
-  Serial.print("\n");   
+  if(data)
+  {
+    //read SIPM in adc_channels
+    for(int i=0;i<SiPM_n;i++)
+    {
+      SiPM_ADC[i]=analogRead(SiPM[i]);
+      SiPM_mV[i]=SiPM_ADC[i]*resolution;
+
+      //print in serial monitor
+      Serial.print("Channel ");
+      Serial.print(i);
+      Serial.print(": ");
+      Serial.print(SiPM_mV[i]);
+      Serial.print(" mV \n");
+
+      //print in file in SD card
+      data.print(SiPM_ADC[i]);
+      data.print(" ");
+    }
+    data.print("\n");
+    //certifies that the datas are saved
+    data.flush();
+    Serial.print("\n");   
+  }
+
   delay(1000);
-  //Serial.print(resolution);
 }
