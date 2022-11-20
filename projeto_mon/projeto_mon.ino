@@ -15,6 +15,20 @@ RTCZero rtc;
 const int SD_port = SDCARD_SS_PIN;
 File data;
 bool open_file = false;
+bool open_dir = false;
+
+arduino::String file_name;
+arduino::String dir_name;
+int dir_year=0;
+int dir_month=0;
+int dir_day=0;
+int file_hour=0;
+int file_minute=0;
+int file_second=0;
+
+//directories per day
+//files per hour
+
 
 #define  SiPM_n 4
 
@@ -68,6 +82,51 @@ void print_Voltage(Stream &Serialx)
     }
 }
 
+
+void set_dir_name()
+{
+    dir_year=rtc.getYear();
+    dir_month=rtc.getMonth();
+    dir_day=rtc.getDay();
+
+    dir_name=arduino::String(dir_year)+"_";
+    
+    if(dir_month<10)
+    {
+      dir_name+="0";
+    }
+    dir_name+=arduino::String(dir_month)+"_";   
+    
+    if(dir_day<10)
+    {
+      dir_name+="0";
+    }
+    dir_name+=arduino::String(dir_day);
+}
+
+
+void set_file_name()
+{
+   
+    file_hour=rtc.getHours();
+    file_minute=rtc.getMinutes();
+    file_second=rtc.getSeconds();
+
+    //file_name=dir_name+"_";
+
+     if(file_hour<10)
+    {
+      file_name+="0";
+    }
+    file_name+=arduino::String(file_hour)+"_";
+
+     if(file_minute<10)
+    {
+      file_name+="0";
+    }
+    file_name+=arduino::String(file_minute);
+}
+
 void setup() 
 {
   //set the resolution of ADC as 12 bits
@@ -79,45 +138,72 @@ void setup()
 
   //For Bluetooth
   Serial1.begin(9600);
+  if(!Serial1)
+  {
+    Serial.print("bluetooth failed");
+  }
 
     // see if the card is present and can be initialized:
   if (!SD.begin(SD_port)) 
   {
     Serial.print("Card failed, or not present");
+    Serial1.print("Card failed, or not present");
     // don't do anything more:
     while (1);
   }
+
 
   //start counting
   rtc.begin();
    
   delay(5000);
   Serial.print("card initialized. \n");
+
 }
 
 void loop() 
 {
-  //check if the file is already open   
-  if(!open_file)
-  {
-       //for test purposes
-    if(SD.exists("teste.txt"))
-    {
-      SD.remove("teste.txt");
-    }
-     
-    //if isnt, opens the file
-    data = SD.open("teste.txt", FILE_WRITE);
-    open_file=true;
-  }
-
    //check if is there information being received by the bluetooth module
    if(Serial1.available()>0)
    {
       arduino:: String epoch=Serial1.readStringUntil('\n');
       //set the time
-      rtc.setEpoch(epoch.toInt());
+      int n= epoch.toInt();
+      if(n>1000)
+      {
+        Serial.print(n);
+        rtc.setEpoch(n);
+      }  
    }
+
+    //create the directory
+    if(!open_dir)
+    {
+      set_dir_name();
+      if(!SD.exists(dir_name))
+      {
+        SD.mkdir(dir_name);
+        delay(100);
+      }
+      open_dir=true;
+    }
+
+    
+    //check if the file is already open     
+    if(!open_file)
+    {
+      set_file_name();
+      if(SD.exists(dir_name+"/"+file_name+".txt"))
+      {
+          SD.remove(dir_name+"/"+file_name+".txt");
+      }
+      //if isnt, opens the file
+      data = SD.open(dir_name+"/"+file_name+".txt", FILE_WRITE);
+      Serial.print(dir_name+"/"+file_name+".txt"+"\n");
+      delay(100);
+      open_file=true;
+    }
+    
 
    //read SIPM in adc_channels
    for(int i=0;i<SiPM_n;i++)
