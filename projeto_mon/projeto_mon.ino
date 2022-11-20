@@ -116,9 +116,13 @@ void set_file_name()
 
      if(file_hour<10)
     {
-      file_name+="0";
+      file_name="0"+arduino::String(file_hour)+"_";
     }
-    file_name+=arduino::String(file_hour)+"_";
+    else
+    {
+      file_name=arduino::String(file_hour)+"_";   
+    }
+   
 
      if(file_minute<10)
     {
@@ -171,8 +175,13 @@ void loop()
       int n= epoch.toInt();
       if(n>1000)
       {
+        Serial.print("time stamp: ");
         Serial.print(n);
+        Serial.print("\n");
         rtc.setEpoch(n);
+        open_file=false;
+        open_dir=false;
+        data.close();
       }  
    }
 
@@ -221,18 +230,41 @@ void loop()
   //if file in sd card is open 
   if(data)
   {
-    //save time in epoch in sd card
-    data.print(rtc.getEpoch());
-    data.print(" ");
-    for(int i=0;i<SiPM_n;i++)
-    { 
-      //print in file in SD card
-      data.print(SiPM_ADC[i]);
-      data.print(" ");
-    }
-    data.print("\n");
-    //certifies that the datas are saved
-    data.flush(); 
+    //if tha day has changed, create a new dir a new file
+     if(rtc.getDay()!=dir_day)
+     {
+        data.close();
+        open_dir=false;
+        open_file=false;  
+        Serial.print("diferente1\n");  
+     }
+     else if(rtc.getHours()!=file_hour)
+     {
+        data.close();
+        open_file=false;   
+        Serial.print("diferente2\n");
+     }
+     else
+     {
+          Serial.print("File in: ")    
+          Serial.print(dir_name+"/"+file_name+".txt"+"\n");
+
+          Serial1.print("File in: ")    
+          Serial1.print(dir_name+"/"+file_name+".txt"+"\n");
+          
+          //save time in epoch in sd card
+          data.print(rtc.getEpoch());
+          data.print(" ");
+          for(int i=0;i<SiPM_n;i++)
+          { 
+            //print in file in SD card
+            data.print(SiPM_ADC[i]);
+            data.print(" ");
+          }
+          data.print("\n");
+          //certifies that the datas are saved
+          data.flush(); 
+     }
   }
 
   //print_time(Serial);
