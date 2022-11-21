@@ -7,8 +7,6 @@ if __name__ == '__main__':
 	
 	tempo = int(time.time())
 	print(tempo)
-	print(str(tempo))
-	teste=str(tempo)
 	serialPort.write(bytes( str(tempo), 'utf-8'))
 	
 		

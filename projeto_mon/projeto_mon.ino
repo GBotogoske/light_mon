@@ -2,6 +2,10 @@
 //SBND-FERMILAB
 //PROJECT LIGHT MONITORING
 
+//To low power mode
+#include "ArduinoLowPower.h"
+
+//libraties that handles with Sd CARD
 #include <SD.h> 
 #include <SPI.h>
 
@@ -16,6 +20,7 @@ const int SD_port = SDCARD_SS_PIN;
 File data;
 bool open_file = false;
 bool open_dir = false;
+bool open_sd = false;
 
 arduino::String file_name;
 arduino::String dir_name;
@@ -142,34 +147,42 @@ void setup()
 
   //For Bluetooth
   Serial1.begin(9600);
+
+  delay(3000);
+  
   if(!Serial1)
   {
     Serial.print("bluetooth failed");
   }
 
+    Serial.print("Starting... \n\n");
+
+  //For Bluetooth
+   Serial1.print("Starting... \n\n"); 
+
     // see if the card is present and can be initialized:
   if (!SD.begin(SD_port)) 
   {
-    Serial.print("Card failed, or not present");
-    Serial1.print("Card failed, or not present");
+    Serial.print("Card failed, or not present\n");
+    Serial1.print("Card failed, or not present\n");
+    open_sd=false;
     // don't do anything more:
-    while (1);
   }
-
+ 
+    
+  open_sd=true;
+  Serial.print("Time stamp: \n");
+  Serial1.print("Time stamp: \n");
 
   //start counting
   rtc.begin();
-   
-  delay(5000);
-  Serial.print("card initialized. \n");
 
-}
-
-void loop() 
-{
-   //check if is there information being received by the bluetooth module
-   if(Serial1.available()>0)
-   {
+  
+  while(!Serial1.available()>0)
+  {
+    
+  }
+  
       arduino:: String epoch=Serial1.readStringUntil('\n');
       //set the time
       int n= epoch.toInt();
@@ -181,12 +194,21 @@ void loop()
         rtc.setEpoch(n);
         open_file=false;
         open_dir=false;
-        data.close();
-      }  
-   }
+     
+     }   
+   
+  delay(5000);
+  //
+
+}
+
+void loop() 
+{
+   //check if is there information being received by the bluetooth module
+   
 
     //create the directory
-    if(!open_dir)
+    if(!open_dir && open_sd)
     {
       set_dir_name();
       if(!SD.exists(dir_name))
@@ -199,16 +221,12 @@ void loop()
 
     
     //check if the file is already open     
-    if(!open_file)
+    if(!open_file && open_sd)
     {
       set_file_name();
-      if(SD.exists(dir_name+"/"+file_name+".txt"))
-      {
-          SD.remove(dir_name+"/"+file_name+".txt");
-      }
-      //if isnt, opens the file
+      //open the file
       data = SD.open(dir_name+"/"+file_name+".txt", FILE_WRITE);
-      Serial.print(dir_name+"/"+file_name+".txt"+"\n");
+      
       delay(100);
       open_file=true;
     }
@@ -221,35 +239,33 @@ void loop()
      SiPM_mV[i]=SiPM_ADC[i]*resolution;
    }
    //print in serial monitor
-   if(Serial)
+   //if(Serial)
      print_Voltage(Serial);
    //send via bluetooth
    if(Serial1)
     print_Voltage(Serial1);
 
   //if file in sd card is open 
-  if(data)
+  if(data && open_sd)
   {
     //if tha day has changed, create a new dir a new file
      if(rtc.getDay()!=dir_day)
      {
         data.close();
         open_dir=false;
-        open_file=false;  
-        Serial.print("diferente1\n");  
+        open_file=false;    
      }
      else if(rtc.getHours()!=file_hour)
      {
         data.close();
         open_file=false;   
-        Serial.print("diferente2\n");
      }
      else
      {
-          Serial.print("File in: ")    
+          Serial.print("File in: "); 
           Serial.print(dir_name+"/"+file_name+".txt"+"\n");
 
-          Serial1.print("File in: ")    
+          Serial1.print("File in: ");   
           Serial1.print(dir_name+"/"+file_name+".txt"+"\n");
           
           //save time in epoch in sd card
@@ -266,7 +282,15 @@ void loop()
           data.flush(); 
      }
   }
+  else
+  {
+     Serial.print("File not open\n");    
+     Serial1.print("File not open\n");    
+  }
 
-  //print_time(Serial);
-  delay(2000);
+    delay(200);
+    LowPower.sleep(1000);
+    //delay(200);
+    Serial.flush();
+    //delay(1000);
 }
