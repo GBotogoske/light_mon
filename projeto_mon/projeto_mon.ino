@@ -20,7 +20,7 @@ const int SD_port = SDCARD_SS_PIN;
 File data;
 bool open_file = false;
 bool open_dir = false;
-bool open_sd = false;
+bool open_sd = true;
 
 arduino::String file_name;
 arduino::String dir_name;
@@ -38,7 +38,7 @@ int file_second=0;
 #define  SiPM_n 4
 
 //set the readout pins as ADC
-const int SiPM[SiPM_n]={A0,A1,A2,A3};
+const int SiPM[SiPM_n]={A1,A2,A3,A4};
 int SiPM_ADC[SiPM_n]={};
 double SiPM_mV[SiPM_n]={};
 
@@ -170,13 +170,12 @@ void setup()
   }
  
     
-  open_sd=true;
+  
   Serial.print("Time stamp: \n");
   Serial1.print("Time stamp: \n");
 
   //start counting
-  rtc.begin();
-
+  
   
   while(!Serial1.available()>0)
   {
@@ -196,20 +195,30 @@ void setup()
         open_dir=false;
      
      }   
-   
+
+  rtc.begin();
+
   delay(5000);
   //
 
+}
+
+void serial_print(arduino::String str)
+{
+  Serial1.print(str);
+  Serial.print(str);
 }
 
 void loop() 
 {
    //check if is there information being received by the bluetooth module
    
-
+    serial_print("loop\n");
+    
     //create the directory
-    if(!open_dir && open_sd)
+    if((!open_dir) && open_sd)
     {
+      serial_print("entrei\n");
       set_dir_name();
       if(!SD.exists(dir_name))
       {
@@ -219,7 +228,7 @@ void loop()
       open_dir=true;
     }
 
-    
+        serial_print("diretorio e file\n");    
     //check if the file is already open     
     if(!open_file && open_sd)
     {
@@ -265,7 +274,7 @@ void loop()
           Serial.print("File in: "); 
           Serial.print(dir_name+"/"+file_name+".txt"+"\n");
 
-          Serial1.print("File in: ");   
+          Serial1.print("File in: ");   open_sd=true;
           Serial1.print(dir_name+"/"+file_name+".txt"+"\n");
           
           //save time in epoch in sd card
@@ -288,9 +297,9 @@ void loop()
      Serial1.print("File not open\n");    
   }
 
-    delay(200);
-    LowPower.sleep(1000);
+    //delay(200);
+   // LowPower.sleep(1000);
     //delay(200);
     Serial.flush();
-    //delay(1000);
+    delay(1000);
 }
