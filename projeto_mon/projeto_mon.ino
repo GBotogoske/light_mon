@@ -141,7 +141,8 @@ void setup()
   //set the resolution of ADC as 12 bits
   //this means a resolution of 3300mV/(2¹²-1) = 805.96 uV
   analogReadResolution(12);
-
+  rtc.begin();
+  
   //For debug in serial monitor
   Serial.begin(9600);
 
@@ -175,8 +176,7 @@ void setup()
   Serial1.print("Time stamp: \n");
 
   //start counting
-  
-  
+ 
   while(!Serial1.available()>0)
   {
     
@@ -184,23 +184,32 @@ void setup()
   
       arduino:: String epoch=Serial1.readStringUntil('\n');
       //set the time
-      int n= epoch.toInt();
-      if(n>1000)
-      {
-        Serial.print("time stamp: ");
-        Serial.print(n);
-        Serial.print("\n");
-        rtc.setEpoch(n);
-        open_file=false;
-        open_dir=false;
-     
-     }   
+      unsigned int n= epoch.toInt();
+      rtc.setEpoch(n);
+      open_file=false;
+      open_dir=false;
 
-  rtc.begin();
 
+      Serial.print("time stamp received: ");
+      Serial.print(n);
+      Serial.print("\n");
+      Serial.print("\n timestamp saved: ");
+      Serial.print(rtc.getEpoch());
+      Serial.print("\n\n");
+
+      Serial1.print("time stamp received: ");
+      Serial1.print(n);
+      Serial1.print("\n");
+      Serial1.print("\n timestamp saved: ");
+      Serial1.print(rtc.getEpoch());
+      Serial1.print("\n\n");
+        
+
+  
   delay(5000);
   //
-
+  Serial1.print("ok\n");
+  
 }
 
 void serial_print(arduino::String str)
@@ -212,13 +221,10 @@ void serial_print(arduino::String str)
 void loop() 
 {
    //check if is there information being received by the bluetooth module
-   
-    serial_print("loop\n");
     
     //create the directory
     if((!open_dir) && open_sd)
     {
-      serial_print("entrei\n");
       set_dir_name();
       if(!SD.exists(dir_name))
       {
@@ -227,10 +233,9 @@ void loop()
       }
       open_dir=true;
     }
-
-        serial_print("diretorio e file\n");    
+ 
     //check if the file is already open     
-    if(!open_file && open_sd)
+    if((!open_file) && open_dir)
     {
       set_file_name();
       //open the file
@@ -297,9 +302,9 @@ void loop()
      Serial1.print("File not open\n");    
   }
 
-    //delay(200);
-   // LowPower.sleep(1000);
+     delay(200);
+     LowPower.sleep(1000);
     //delay(200);
     Serial.flush();
-    delay(1000);
+    //delay(1000);
 }
