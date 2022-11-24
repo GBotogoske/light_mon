@@ -48,6 +48,8 @@ const int precision = 12;
 //precision of ADC in voltage (mV)
 const double resolution=3300/(pow(2,precision)-1);
 
+
+//function to print number in form of string
 void print_number(Stream &Serialx, int number)
 {
    if (number < 10) 
@@ -87,7 +89,7 @@ void print_Voltage(Stream &Serialx)
     }
 }
 
-
+//create the name of the dir in sd card
 void set_dir_name()
 {
     dir_year=rtc.getYear();
@@ -110,6 +112,7 @@ void set_dir_name()
 }
 
 
+//create the file name in sd card
 void set_file_name()
 {
    
@@ -212,6 +215,8 @@ void setup()
   
 }
 
+
+//print for debug
 void serial_print(arduino::String str)
 {
   Serial1.print(str);
@@ -262,14 +267,14 @@ void loop()
   //if file in sd card is open 
   if(data && open_sd)
   {
-    //if tha day has changed, create a new dir a new file
+    //if tha day has changed, create a new dir and a new file
      if(rtc.getDay()!=dir_day)
      {
         data.close();
         open_dir=false;
         open_file=false;    
      }
-     else if(rtc.getHours()!=file_hour)
+     else if(rtc.getHours()!=file_hour)//if only the name have, changed create a new file in same dir
      {
         data.close();
         open_file=false;   
@@ -303,8 +308,12 @@ void loop()
   }
 
      delay(200);
+
+     //mode power save
      LowPower.sleep(1000);
     //delay(200);
     Serial.flush();
     //delay(1000);
+
+    
 }
