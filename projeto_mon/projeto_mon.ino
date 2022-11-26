@@ -226,7 +226,8 @@ void serial_print(arduino::String str)
 void loop() 
 {
    //check if is there information being received by the bluetooth module
-    
+
+    Serial1.print("START\n");
     //create the directory
     if((!open_dir) && open_sd)
     {
@@ -264,6 +265,8 @@ void loop()
    if(Serial1)
     print_Voltage(Serial1);
 
+  
+  
   //if file in sd card is open 
   if(data && open_sd)
   {
@@ -306,6 +309,8 @@ void loop()
      Serial.print("File not open\n");    
      Serial1.print("File not open\n");    
   }
+
+    Serial1.print("END\n");    
 
      delay(200);
 
