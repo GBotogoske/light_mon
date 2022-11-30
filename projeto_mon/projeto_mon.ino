@@ -62,30 +62,48 @@ void print_number(Stream &Serialx, int number)
 //print in serial monitor//bluetooth
 void print_Voltage(Stream &Serialx)
 {
+    int tempo = 10;
     if(Serialx.availableForWrite()>0)
     {
       print_number(Serialx,rtc.getDay());
+      delay(tempo);
       Serialx.print("/");
+      delay(tempo);
       print_number(Serialx,rtc.getMonth());
+      delay(tempo);
       Serialx.print("/");
+      delay(tempo);
       print_number(Serialx,rtc.getYear());
+      delay(tempo);
       Serialx.print(" ");
+      delay(tempo);
       print_number(Serialx,rtc.getHours());
+      delay(tempo);
       Serialx.print(":");
+      delay(tempo);
       print_number(Serialx,rtc.getMinutes());
+      delay(tempo);
       Serialx.print(":");
+      delay(tempo);
       print_number(Serialx,rtc.getSeconds());
+      delay(tempo);
       Serialx.println();
-    
+      delay(tempo);
       for(int i=0;i<SiPM_n;i++)
       {
           Serialx.print("Channel ");
+          delay(tempo);
           Serialx.print(i);
+          delay(tempo);
           Serialx.print(": ");
+          delay(tempo);
           Serialx.print(SiPM_mV[i]);
+          delay(tempo);
           Serialx.print(" mV \n");
+          delay(tempo);
       }
       Serialx.print("\n");
+      delay(tempo);
     }
 }
 
